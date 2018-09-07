@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t bfireapp/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run bfireapp/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t bfireapp/complex-client ./client
+  - docker build -t bfireapp/complex-nginx ./nginx
+  - docker build -t bfireapp/complex-server ./server
+  - docker build -t bfireapp/complex-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push bfireapp/complex-client
+  - docker push bfireapp/complex-nginx
+  - docker push bfireapp/complex-server
+  - docker push bfireapp/complex-worker
